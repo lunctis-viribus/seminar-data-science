@@ -1,7 +1,7 @@
 
-% image_s = imread('source.jpg');
+image_s = imread('source.jpg');
 
-image_s = imread('./img/fg.jpg');
+% image_s = imread('./img/fg.jpg');
 
 f1 = figure(2);
 imshow(image_s);
@@ -17,8 +17,8 @@ pause;
 close(f1);
 
 
-% image_t = imread('target.jpg');
-image_t = imread('./img/bg.jpg');
+image_t = imread('target.jpg');
+% image_t = imread('./img/bg.jpg');
 f2 = figure(2);
 imshow(image_t);
 disp("select the target region");
@@ -35,11 +35,11 @@ close(f1);
 [h_t w_t d_t]  = size(region_target);
 [h_s w_s d_s]  = size(region_source);
 if(h_t<w_t)
-    rate = floor(10*(h_t-2)/h_s)/10;
-    region_source = imresize(region_source,rate);
+    rate = floor(10*(h_t)/h_s)/10;
+    region_source = imresize(region_source,rate*0.9);
 else
-    rate = floor(10*(w_t-2)/w_s)/10;
-    region_source = imresize(region_source,rate);
+    rate = floor(10*(w_t)/w_s)/10;
+    region_source = imresize(region_source,rate*0.9);
 end
 
 
@@ -58,15 +58,15 @@ end
 image_empty = zeros(h+2,w+2,d);
 image_empty(2:h+1,2:w+1,:) = ones(h,w,d);
 image_m = image_empty;
-
 target = region_target;
+disp("?");
 target(2:h+1,2:w+1,:) = region_source;
 target_1 = target(1:h+2,1:w+2,:);
 f4 = figure(4);
 imshow(target_1);
 pause;
 close(f4);
-
+disp("??");
 boundary_h = h+2;
 boundary_w = w+2;
 U = double(reshape(target_1,boundary_h*boundary_w,d_t))/255;
@@ -131,7 +131,7 @@ end
 z = (boundary_w-1)*boundary_h; % 71862 rows, starts at 71863
 for k = 1:boundary_w
     for i = 1:boundary_h-1
-        if image_m(i,k) ~= 0 | (i > 1 & image_m(i+1,k) ~= 0)
+        if image_m(i,k) ~= 0 | (image_m(i+1,k) ~= 0)
             r = [r,z];
             c = [c,i+(k-1)*(boundary_h)];
             v = [ v,1];
@@ -165,6 +165,10 @@ for k = 1:boundary_w
         end
     end
 end
+r_ss = [r_ss , z , z+1, z+2, z+3];
+c_ss = [c_ss , 1 , boundary_h, boundary_h*(boundary_w-1)+1, boundary_h*boundary_w];
+v_ss = [v_ss , 1 , 1 ,1 , 1];
+
 G = sparse(r,c,v,(boundary_h-1)*boundary_w+(boundary_w-1)*boundary_h,boundary_h*boundary_w);
 
 S = sparse(r_s,c_s,v_s,(boundary_h-1)*boundary_w+(boundary_w-1)*boundary_h,boundary_h*boundary_w);
