@@ -1,5 +1,5 @@
 % Supress warnings
-%%warning('off','all')
+warning('off','all')
 
 target = imread('./img/bg.jpg');
 source = imread('./img/fg.jpg');
