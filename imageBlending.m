@@ -148,10 +148,11 @@ if manual
     boundary_h = h+2;
     boundary_w = w+2;
     U = double(reshape(region_target,boundary_h*boundary_w,d))/255;
-    end    
-    
-    
+    end      
 else
+    if nargin < 6
+        error('Not enough parameters');
+    end
     [~, ~, d]=size(source);
     mask = round(mask(:,:, 1)/255);
     [x_cord, y_cord] = find(mask);
