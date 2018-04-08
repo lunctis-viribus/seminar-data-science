@@ -16,26 +16,42 @@ if manual
     % do anything. Smaller than 3 does not work.
     if nargin == 3
         mask_selected = 0;
-        f1 = figure(1);
-        imshow(source);
-        disp('select the source region');
-        rect = getrect;
-        rect = round(rect);
-        region_source = source(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:);
-        close(f1);
+        accepted = 0;
+        while ~accepted
+            f1 = figure(1);
+            imshow(source);
+            disp('select the source region');
+            rect = getrect;
+            rect = round(rect);
+            if ~(rect(2) < 1 | rect(2)+rect(4)-1 > size(source,1) | rect(1) < 1 | rect(1)+rect(3)-1 > size(source,2))
+                region_source = source(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:);
+                accepted = 1;
+            else
+                disp('Region outside image');
+            end
+            close(f1);
+        end
         f1 = figure(1);
         imshow(region_source);
         disp('type anything to close the figure');
         pause;
         close(f1);
         % Choose target region
-        f2 = figure(2);
-        imshow(target);
-        disp('select the target region');
-        rect = getrect;
-        rect = round(rect);
-        region_target = target(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:);
-        close(f2);
+        accepted = 0;
+        while ~accepted
+            f2 = figure(2);
+            imshow(target);
+            disp('select the target region');
+            rect = getrect;
+            rect = round(rect);
+            if ~(rect(2) < 1 | rect(2)+rect(4)-1 > size(target,1) | rect(1) < 1 | rect(1)+rect(3)-1 > size(target,2))
+                region_target = target(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:);
+                accepted = 1;
+            else
+                disp('Region outside target');
+            end
+            close(f2);
+        end
         f1 = figure(1);
         imshow(region_target);
         disp('type anything to close the figure');
@@ -70,47 +86,51 @@ if manual
         image_empty = zeros(h+2,w+2,d);
         image_empty(2:h+1,2:w+1,:) = ones(h,w,d);
         image_m = image_empty;
-    else        
-        mask_selected = 1;
-        [h w d]=size(source);
-        mask = round(mask(:,:, 1)/255);
-        [x_cord, y_cord] = find(mask);
-        h = peak2peak(x_cord) + 1;
-        w = peak2peak(y_cord) + 1;
+    else
+        if nargin == 4
+            mask_selected = 1;
+            [h w d]=size(source);
+            mask = round(mask(:,:, 1)/255);
+            [x_cord, y_cord] = find(mask);
+            h = peak2peak(x_cord) + 1;
+            w = peak2peak(y_cord) + 1;
 
-        %Change mask
-        image_empty = zeros(h+2,w+2,d);
-        image_empty(2:h+1,2:w+1) = mask(min(x_cord):max(x_cord),min(y_cord):max(y_cord));
-        image_m = image_empty;
+            %Change mask
+            image_empty = zeros(h+2,w+2,d);
+            image_empty(2:h+1,2:w+1) = mask(min(x_cord):max(x_cord),min(y_cord):max(y_cord));
+            image_m = image_empty;
 
-        % Recalibrate coordinates
-        x_cord_zero = x_cord - min(x_cord) + 1;
-        y_cord_zero = y_cord - min(y_cord) + 1;
+            % Recalibrate coordinates
+            x_cord_zero = x_cord - min(x_cord) + 1;
+            y_cord_zero = y_cord - min(y_cord) + 1;
 
-        image_empty = zeros(h+2,w+2,3);
-        for dimen = 1:d
-            image_empty(2:h+1, 2:w+1,:) = source(min(x_cord):max(x_cord),min(y_cord):max(y_cord), :);
-        end
-        image_s = image_empty; 
-        accepted = 0;
-        while ~accepted
-            f2 = figure(2);
-            imshow(target);
-            disp('Select the top left corner where the source image will be "pasted"');
-            [rectX,rectY] = ginput(1);
-            rect = round([rectX,rectY]);            
-            if ~(rect(2) < 1 | rect(2) + h > size(target, 1) | rect(1) < 1 | rect(1) + w > size(target, 2))
-                region_target = target(rect(2)-1:rect(2)+h,rect(1)-1:rect(1)+w,:);
-                accepted = 1;
-            else
-                disp('Source image will be outside of the target image, choose a different position')
+            image_empty = zeros(h+2,w+2,3);
+            for dimen = 1:d
+                image_empty(2:h+1, 2:w+1,:) = source(min(x_cord):max(x_cord),min(y_cord):max(y_cord), :);
             end
-            close(f2);
-        end
-        for channel = 1:3
-            for j = 1:(size(x_cord,1))
-                region_target(x_cord_zero(j)+1, y_cord_zero(j)+1, channel) = image_s(x_cord_zero(j)+1,y_cord_zero(j)+1, channel);    
+            image_s = image_empty; 
+            accepted = 0;
+            while ~accepted
+                f2 = figure(2);
+                imshow(target);
+                disp('Select the top left corner where the source image will be "pasted"');
+                [rectX,rectY] = ginput(1);
+                rect = round([rectX,rectY]);            
+                if ~(rect(2) < 1 | rect(2) + h > size(target, 1) | rect(1) < 1 | rect(1) + w > size(target, 2))
+                    region_target = target(rect(2)-1:rect(2)+h,rect(1)-1:rect(1)+w,:);
+                    accepted = 1;
+                else
+                    disp('Source image will be outside of the target image, choose a different position')
+                end
+                close(f2);
             end
+            for channel = 1:3
+                for j = 1:(size(x_cord,1))
+                    region_target(x_cord_zero(j)+1, y_cord_zero(j)+1, channel) = image_s(x_cord_zero(j)+1,y_cord_zero(j)+1, channel);    
+                end
+            end
+        else
+            error('wrong amount of parameters');          
         end
     boundary_h = h+2;
     boundary_w = w+2;
