@@ -1,3 +1,6 @@
+% Supress warnings
+%%warning('off','all')
+
 target = imread('./img/bg.jpg');
 source = imread('./img/fg.jpg');
 mask = imread('./img/mask2.jpg');
@@ -10,9 +13,9 @@ offsetY = 50;
 manually_select = 1;
 
 %use the mask or not (if using the mask, set it to 1)
-mask_selected = 1;
+mask_selected = 0;
 
-output = imageBlending(source,target,manually_select, mask, offsetX,offsetY,mask_selected);
+output = imageBlending(source,target,manually_select);
 imshow(output);
 
 
